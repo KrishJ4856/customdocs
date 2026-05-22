@@ -1,0 +1,34 @@
+---
+title: Handoffs
+description: Delegate tasks from one agent to another
+---
+
+Handoffs let an agent delegate part of a conversation to another agent. This is useful when different agents specialise in specific areas. In a customer support app for example, you might have agents that handle bookings, refunds or FAQs.
+
+Handoffs are represented as tools to the LLM. If you hand off to an agent called `Refund Agent`, the tool name would be `transfer_to_refund_agent`.
+
+> Read this page after [Agents](/openai-agents-js/guides/agents#composition-patterns) once you know the specialist should take over the conversation. If the specialist should stay behind the original agent, use [agents as tools](/openai-agents-js/guides/tools#4-agents-as-tools) instead.
+
+## Creating a handoff
+
+Every agent accepts a `handoffs` option. It can contain other `Agent` instances or `Handoff` objects returned by the `handoff()` helper.
+
+If you pass plain `Agent` instances, their `handoffDescription` (if provided) is appended to the default tool description. Use it to clarify when the model should pick that handoff.
+
+### Basic usage
+
+<Code lang="typescript" code={basicUsageExample} title="Basic handoffs" />
+
+### Customising handoffs via `handoff()`
+
+The `handoff()` function lets you tweak the generated tool.
+
+- `agent` – the agent to hand off to.
+- `toolNameOverride` – override the default `transfer_to_<agent_name>` tool name.
+- `toolDescriptionOverride` – override the default tool description.
+- `onHandoff` – callback when the handoff occurs. Receives a `RunContext` and, when `inputType` is configured, the parsed handoff payload.
+- `inputType` – schema for the handoff tool-call arguments.
+- `inputFilter` – filter the history passed to the next agent.
+- `isEnabled` – boolean or predicate that exposes the handoff only for matching runs.
+
+The `handoff()` helper always transfers control to the specific `agent` you passed in. If you have multiple possible destinations, register one handoff per destination and let the model choose among them. Use a custom `Handoff` when your own handoff code must decide which agent to return at invocation time.
