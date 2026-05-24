@@ -1,29 +1,41 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
-import {useRouter} from "next/navigation"
+import { useRouter } from "next/navigation"
+import Link from 'next/link'
 import { generateDocs } from '../server/doc-actions'
+import { getDocsByUser } from '@/db/queries'
 
-interface AttachedFile {
-  id: string
-  name: string
-  type: string
-}
+// interface AttachedFile {
+//   id: string
+//   name: string
+//   type: string
+// }
 
-interface Files{
+interface Files {
   id: string,
   file: File
 }
 
-interface Documentation {
+interface DocCard {
   id: string
   title: string
-  description: string
+  slug: string
+  brief: string
   date: string
   pageCount: number
   isPublic: boolean
 }
+
+// interface Documentation {
+//   id: string
+//   title: string
+//   description: string
+//   date: string
+//   pageCount: number
+//   isPublic: boolean
+// }
 
 // takes the file path and returns a logo for the file based on path extension
 const fileTypeIcon = (name: string): string => {
@@ -38,66 +50,89 @@ const fileTypeIcon = (name: string): string => {
   }
 }
 
-// mock documents to be displayed as cards
-// todo: here we fetch the user's docs from the db and display
-/*
-  table 1: user
-  fields: userId, name, email, profile image, array of documents created in his account of type @Documentation interface[] where doc id can be a foreign key pointing to that specific doc in the docs table...
-*/
-const mockDocs: Documentation[] = [
-  {
-    id: '1',
-    title: 'Java — OOP, Collections & I/O',
-    description: 'Covers object-oriented principles, generics, collection framework, and file handling.',
-    date: 'May 16, 2026',
-    pageCount: 12,
-    isPublic: true,
-  },
-  {
-    id: '2',
-    title: 'TypeScript Fundamentals',
-    description: 'Types, interfaces, generics, utility types, and advanced patterns.',
-    date: 'May 14, 2026',
-    pageCount: 9,
-    isPublic: false,
-  },
-  {
-    id: '3',
-    title: 'React Hooks Deep Dive',
-    description: 'useState, useEffect, useRef, custom hooks, and performance patterns.',
-    date: 'May 10, 2026',
-    pageCount: 7,
-    isPublic: false,
-  },
-]
+function DocCardItem({ doc, onClick }: { doc: DocCard; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white text-left transition-all duration-200 hover:border-gray-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-950 dark:hover:border-gray-700"
+    >
+      {/* Top decorative area */}
+      <div className="relative h-28 w-full overflow-hidden bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+        {/* Vertical accent line */}
+        <div className="absolute left-5 top-0 h-full w-px bg-gradient-to-b from-transparent via-indigo-400/60 to-transparent dark:via-indigo-500/40" />
+        {/* Dot accent at top of line */}
+        <div className="absolute left-[18px] top-4 h-1.5 w-1.5 rounded-full bg-indigo-400 dark:bg-indigo-500" />
+        {/* Dot grid top-right */}
+        <div className="absolute right-5 top-4 grid grid-cols-4 gap-[5px]">
+          {Array.from({ length: 16 }).map((_, i) => (
+            <div key={i} className="h-[3px] w-[3px] rounded-full bg-gray-300 dark:bg-gray-700" />
+          ))}
+        </div>
+        {/* Public badge */}
+        {doc.isPublic && (
+          <div className="absolute right-4 bottom-3">
+            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+              Public
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Card content */}
+      <div className="flex flex-1 flex-col gap-2 px-5 py-4">
+        <h3 className="text-sm font-semibold leading-snug text-gray-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          {doc.title}
+        </h3>
+        {doc.brief && (
+          <p className="line-clamp-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+            {doc.brief}
+          </p>
+        )}
+        <div className="mt-auto flex items-center gap-2.5 pt-2 text-[10px] text-gray-400">
+          <span>{doc.date}</span>
+          <span>·</span>
+          <span>{doc.pageCount} {doc.pageCount === 1 ? 'page' : 'pages'}</span>
+        </div>
+      </div>
+    </button>
+  )
+}
 
 export default function DashboardPage() {
   const { user } = useUser()
   const router = useRouter()
   const [query, setQuery] = useState('')
-  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([])
+  // const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([])
   const [uploadedFiles, setUploadedFiles] = useState<Files[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [docs, setDocs] = useState<DocCard[]>([])
+  const [loadingDocs, setLoadingDocs] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const firstName = user?.firstName ?? 'there'
+  const firstName = user?.firstName?.toLowerCase() ?? 'there'
 
   const showToast = useCallback((msg: string) => {
     setToast(msg)
-    setTimeout(() => setToast(null), 3000)
+    setTimeout(() => setToast(null), 3500)
   }, [])
+
+  // Fetch user's docs
+  useEffect(() => {
+    if (!user?.id) return
+    setLoadingDocs(true)
+    fetch(`/api/docs`)
+      .then((r) => r.json())
+      .then((data) => {
+        setDocs(data.docs ?? [])
+        setLoadingDocs(false)
+      })
+      .catch(() => setLoadingDocs(false))
+  }, [user?.id])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files) return
-
-    // const newFiles: AttachedFile[] = Array.from(files).map((f) => ({
-    //   id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    //   name: f.name,
-    //   type: f.type,
-    // }))
-    // setAttachedFiles((prev) => [...prev, ...newFiles])
 
     const newFiles: Files[] = Array.from(files).map((f) => {
       return {
@@ -119,11 +154,9 @@ export default function DashboardPage() {
       return
     }
     setIsGenerating(true)
-    // TODO: wire up API
-    // await new Promise((r) => setTimeout(r, 1200))
     const formData = new FormData()
     formData.append("query", query)
-    if(uploadedFiles.length > 0){
+    if (uploadedFiles.length > 0) {
       uploadedFiles.forEach((f) => {
         formData.append("files", f.file)
       })
@@ -131,7 +164,7 @@ export default function DashboardPage() {
 
     const result = await generateDocs(formData)
     console.log(result)
-    if(result.success){
+    if (result.success) {
       showToast("Server returned a success message - docs created!")
       console.log(`routing to: /docs/${result.slug}/${result.firstPageSlug}`)
       router.push(`/docs/${result.slug}/${result.firstPageSlug}`)
@@ -253,57 +286,42 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* ── Your docs ──────────────────────────────────────── */}
+      {/* ── Docs section ─────────────────────────────────────────────────── */}
       <section>
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            Your docs
-            <span className="ml-2 font-mono text-xs font-normal text-gray-400">
-              {mockDocs.length}
-            </span>
-          </h2>
-          <button className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-            Sort: Recent
-          </button>
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-950 dark:text-gray-50">
+            {firstName}{' '}
+            <span className="text-indigo-400 dark:text-indigo-400">[docs]</span>
+          </h1>
+          {!loadingDocs && docs.length > 0 && (
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {docs.length} {docs.length === 1 ? 'documentation' : 'documentations'} created
+            </p>
+          )}
         </div>
 
-        {mockDocs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 py-16 text-center dark:border-gray-800">
+        {/* States */}
+        {loadingDocs ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-52 animate-pulse rounded-2xl border border-gray-100 bg-gray-50 dark:border-gray-800 dark:bg-gray-900" />
+            ))}
+          </div>
+        ) : docs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-20 text-center dark:border-gray-800">
+            <div className="mb-3 text-2xl">📄</div>
             <p className="text-sm font-medium text-gray-900 dark:text-gray-100">No docs yet</p>
-            <p className="mt-1 text-xs text-gray-400">Create your first doc above to get started.</p>
+            <p className="mt-1 text-xs text-gray-400">Generate your first documentation above.</p>
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {mockDocs.map((doc) => (
-              <button
+          <div className="grid gap-4 sm:grid-cols-2">
+            {docs.map((doc) => (
+              <DocCardItem
                 key={doc.id}
-                className="group flex flex-col items-start rounded-xl border border-gray-200 bg-white p-5 text-left transition-all hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
-                onClick={() => showToast('Opening docs viewer… (coming soon)')}
-              >
-                {/* Title row */}
-                <div className="mb-3 flex w-full items-start justify-between gap-2">
-                  <h3 className="text-sm font-semibold leading-snug text-gray-900 dark:text-gray-100">
-                    {doc.title}
-                  </h3>
-                  {doc.isPublic && (
-                    <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-                      Public
-                    </span>
-                  )}
-                </div>
-
-                {/* Description */}
-                <p className="mb-4 line-clamp-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                  {doc.description}
-                </p>
-
-                {/* Meta */}
-                <div className="mt-auto flex items-center gap-3 text-[10px] text-gray-400">
-                  <span>{doc.date}</span>
-                  <span>·</span>
-                  <span>{doc.pageCount} pages</span>
-                </div>
-              </button>
+                doc={doc}
+                onClick={() => router.push(`/docs/${doc.slug}`)}
+              />
             ))}
           </div>
         )}

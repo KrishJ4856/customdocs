@@ -42,7 +42,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ClerkProvider>
           <ThemeProvider>
-            <header className="flex items-center justify-between border-b border-gray-200 px-6 py-3 dark:border-gray-700">
+            <header className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white dark:bg-black px-6 py-3 dark:border-gray-700">
               <span className="font-semibold text-gray-900 dark:text-gray-100">
                 Custom Docs
               </span>

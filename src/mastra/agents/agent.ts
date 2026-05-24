@@ -28,6 +28,9 @@ OUTPUT FORMAT
 Return a JSON object with this exact structure:
 
 {
+  "docTitle": string,
+  "docSlug": string,
+  "docBrief": string,
   sections: [
     {
       title: string,           // section heading (groups related topics)
@@ -48,6 +51,10 @@ Return a JSON object with this exact structure:
   ]
 }
 
+Rules for docTitle: concise (2-5 words), title case, describes the full scope
+Rules for docSlug: kebab-case from docTitle, lowercase, no special chars, 3-6 words max
+Rules for docBrief: short description of what the doc is about. one to two lines max.
+
 ---
 
 NOTE ON contentOverview
@@ -57,12 +64,13 @@ Write contentOverview entries with depth and specificity — include the key con
 ---
 
 HOW THE OUTPUT IS USED
-
-- Sections → sidebar group headers (non-clickable labels)
-- Topics → sidebar links, each becomes one docs page
-- Subtopics → right-column TOC within a page; each gets its own markdown block
+- docTitle → doc name in sidebar header and dashboard
+- docSlug → base URL slug (unique id appended automatically)
+- docBrief: used to display basic doc info on user's dashboard
+- Sections → sidebar group headers
+- Topics → one page each
+- Subtopics → right column TOC entries
 - contentOverview → passed directly to the content writer agent
-
 `,
 })
 

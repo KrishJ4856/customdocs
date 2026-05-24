@@ -1,16 +1,18 @@
 import { redirect, notFound } from 'next/navigation'
-import { getDoc, getFirstTopic } from '@/lib/doc-store'
+import { getDocBySlug } from '../../../db/queries'
 
 interface Props {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
-export default function DocIndexPage({ params }: Props) {
-  const doc = getDoc(params.slug)
-  if (!doc) notFound()
+export default async function DocIndexPage({ params }: Props) {
+  const { slug } = await params
 
-  const first = getFirstTopic(doc)
-  if (!first) notFound()
+  const doc = await getDocBySlug(slug)
 
-  redirect(`/docs/${params.slug}/${first.slug}`)
+  if(!doc || !doc.pages.length) notFound()
+
+  const firstPage = doc.pages[0]
+
+  redirect(`/docs/${slug}/${firstPage.slug}`)
 }
