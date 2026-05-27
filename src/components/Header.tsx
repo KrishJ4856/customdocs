@@ -6,7 +6,7 @@ import { useKeyModal } from '@/context/KeyModalContext'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Show, SignUpButton, UserButton } from '@clerk/nextjs'
-import { googleSansFlex } from "../app/fonts"
+import { googleSansFlex, playwrite } from "../app/fonts"
 
 const KeyIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -25,7 +25,7 @@ export default function Header() {
         href="/"
         className="group flex items-center gap-2.5 transition-opacity hover:opacity-80"
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-950 text-white shadow-sm dark:bg-white dark:text-gray-950">
+        {/* <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-950 text-white shadow-sm dark:bg-white dark:text-gray-950">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -39,9 +39,9 @@ export default function Header() {
           >
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
           </svg>
-        </div>
-        <span className={`${googleSansFlex.className} text-lg tracking-tight transition-colors text-black dark:text-white font-bold`}>
-          Custom Docs
+        </div> */}
+        <span className={`${playwrite.className} text-xl tracking-tight transition-colors text-black dark:text-white font-bold`}>
+          custom<span className={`${playwrite.className} transition-colors text-(--doc-accent)`}>Docs</span>
         </span>
       </Link>
 
