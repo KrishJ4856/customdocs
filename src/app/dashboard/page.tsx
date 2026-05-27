@@ -120,6 +120,7 @@ export default function DashboardPage() {
   const [uploadedFiles, setUploadedFiles] = useState<Files[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [showGenToast, setShowGenToast] = useState(false)
   const [docs, setDocs] = useState<DocCard[]>([])
   const [loadingDocs, setLoadingDocs] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -167,10 +168,13 @@ export default function DashboardPage() {
       return
     }
     setIsGenerating(true)
+    setShowGenToast(true)
     const formData = new FormData()
     formData.append("query", query)
 
     const result = await generateDocs(formData)
+    setShowGenToast(false)
+    setIsGenerating(false)
     if (result.success) {
       showToast("Docs created!")
       router.push(`/docs/${result.slug}/${result.firstPageSlug}`)
@@ -199,6 +203,24 @@ export default function DashboardPage() {
       {toast && (
         <div className="fixed left-1/2 top-6 z-50 -translate-x-1/2 animate-in fade-in slide-in-from-top-2 duration-200 rounded-xl border border-gray-200/80 bg-white/95 px-5 py-3 text-sm font-medium text-gray-700 shadow-lg backdrop-blur-sm dark:border-gray-700/80 dark:bg-gray-900/95 dark:text-gray-200">
           {toast}
+        </div>
+      )}
+
+      {showGenToast && (
+        <div className="fixed left-1/2 top-6 z-50 -translate-x-1/2 animate-in fade-in slide-in-from-top-2 duration-200 rounded-xl border border-amber-200/80 bg-amber-50/95 px-5 py-3 text-sm font-medium text-amber-800 shadow-lg backdrop-blur-sm dark:border-amber-800/60 dark:bg-amber-950/90 dark:text-amber-200 flex items-center gap-3">
+          <svg className="h-4 w-4 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+          <span>Docs generation may take some time depending on your request. Typically less than 5 minutes.</span>
+          <button
+            onClick={() => setShowGenToast(false)}
+            className="ml-1 shrink-0 rounded-md p-0.5 text-amber-500 hover:text-amber-700 dark:hover:text-amber-300 cursor-pointer"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
 
