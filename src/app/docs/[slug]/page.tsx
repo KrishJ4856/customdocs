@@ -1,5 +1,5 @@
 import { redirect, notFound } from 'next/navigation'
-import { getDocBySlug } from '../../../db/queries'
+import { getDocBySlug } from '@/db/queries'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -7,12 +7,9 @@ interface Props {
 
 export default async function DocIndexPage({ params }: Props) {
   const { slug } = await params
-
   const doc = await getDocBySlug(slug)
 
-  if(!doc || !doc.pages.length) notFound()
+  if (!doc || !doc.pages.length) notFound()
 
-  const firstPage = doc.pages[0]
-
-  redirect(`/docs/${slug}/${firstPage.slug}`)
+  redirect(`/docs/${slug}/${doc.firstPageSlug}`)
 }

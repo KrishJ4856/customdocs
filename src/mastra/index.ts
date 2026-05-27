@@ -1,13 +1,11 @@
 import { Mastra } from '@mastra/core'
-import { contentPlannerAgent, contentWriterAgent } from './agents/agent'
+import { createAgents } from './agents/agent'
 import { createDocsWorkflow } from './workflows/workflow'
 
-export const mastra = new Mastra({
-  agents: {
-    contentPlannerAgent,
-    contentWriterAgent,
-  },
-  workflows: {
-    createDocsWorkflow,
-  },
-})
+export function createMastra(apiKey: string) {
+  const agents = createAgents(apiKey)
+  return new Mastra({
+    agents,
+    workflows: { createDocsWorkflow },
+  })
+}

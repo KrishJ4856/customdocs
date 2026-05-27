@@ -1,5 +1,8 @@
+'use client'
+
+import { use } from 'react'
 import { notFound } from 'next/navigation'
-import { getDocBySlug } from '@/db/queries'
+import { useDoc } from '@/context/DocContext'
 import DocViewer from '@/components/docs/DocViewer'
 import type { DocForViewer } from '@/components/docs/DocViewer'
 
@@ -7,16 +10,13 @@ interface Props {
   params: Promise<{ slug: string; pageSlug: string }>
 }
 
-export default async function DocPage({ params }: Props) {
-  const { slug, pageSlug } = await params
-
-  const doc = await getDocBySlug(slug)
-  if (!doc || !doc.pages.length) notFound()
+export default function DocPage({ params }: Props) {
+  const { slug, pageSlug } = use(params)
+  const doc = useDoc()
 
   const activePage = doc.pages.find((p) => p.slug === pageSlug) ?? doc.pages[0]
   if (!activePage) notFound()
 
-  // Reconstruct sidebar sections from flat pages
   const sections = doc.pages.reduce<{ title: string; topics: typeof doc.pages }[]>(
     (acc, page) => {
       const existing = acc.find((s) => s.title === page.sectionTitle)

@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import remarkGfm from 'remark-gfm'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import type { Page } from '@/db/schema'
+import type { Page } from '@/db'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -76,7 +76,7 @@ function PreBlock({ children, ...props }: React.HTMLAttributes<HTMLPreElement>) 
           const text = preRef.current?.querySelector('code')?.innerText ?? ''
           try { await navigator.clipboard.writeText(text) } catch {}
         }}
-        className="rounded-xl border border-gray-200 bg-gray-950 px-5 py-4 text-sm dark:border-gray-800"
+        className="overflow-x-auto rounded-xl border border-gray-200 bg-gray-950 px-5 py-4 text-sm dark:border-gray-800"
         {...props}
       >
         {children}
@@ -87,82 +87,58 @@ function PreBlock({ children, ...props }: React.HTMLAttributes<HTMLPreElement>) 
 
 // ── Custom markdown components ─────────────────────────────────────────────────
 
-const mdComponents = {
+export const mdComponents = {
   h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => {
     const id = slugify(String(children))
     return (
-      <h2 id={id} className="group relative mt-12 mb-4 scroll-mt-24 text-xl font-semibold text-gray-900 dark:text-gray-50" {...props}>
-        <a href={`#${id}`} className="absolute -left-5 top-0 hidden text-gray-300 group-hover:inline dark:text-gray-600" aria-hidden>#</a>
+      <h2 id={id} className="group relative mt-12 mb-4 scroll-mt-6 text-xl font-semibold text-(--doc-accent) dark:text-(--doc-section-color)" {...props}>
+        <a href={`#${id}`} className="absolute -left-5 top-0 hidden group-hover:inline text-(--doc-section-color)" aria-hidden>#</a>
         {children}
       </h2>
     )
   },
   h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => {
     const id = slugify(String(children))
-    return (
-      <h3 id={id} className="mt-8 mb-3 scroll-mt-24 text-base font-semibold text-gray-800 dark:text-gray-100" {...props}>
-        {children}
-      </h3>
-    )
+    return <h3 id={id} className="mt-8 mb-3 scroll-mt-6 text-base font-semibold text-gray-800 dark:text-gray-100" {...props}>{children}</h3>
   },
-  p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-    <p className="mb-4 leading-7 text-gray-600 dark:text-gray-400" {...props}>{children}</p>
-  ),
-  ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-    <ul className="mb-4 ml-4 space-y-1.5 list-disc marker:text-gray-400" {...props}>{children}</ul>
-  ),
-  ol: ({ children, ...props }: React.HTMLAttributes<HTMLOListElement>) => (
-    <ol className="mb-4 ml-4 space-y-1.5 list-decimal marker:text-gray-400" {...props}>{children}</ol>
-  ),
-  li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
-    <li className="leading-7 text-gray-600 dark:text-gray-400 pl-1" {...props}>{children}</li>
-  ),
+  p:  ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => <p  className="mb-4 leading-7 text-gray-600 dark:text-gray-400" {...props}>{children}</p>,
+  ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>)     => <ul className="mb-4 ml-4 space-y-1.5 list-disc marker:text-gray-400" {...props}>{children}</ul>,
+  ol: ({ children, ...props }: React.HTMLAttributes<HTMLOListElement>)     => <ol className="mb-4 ml-4 space-y-1.5 list-decimal marker:text-gray-400" {...props}>{children}</ol>,
+  li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>)        => <li className="leading-7 text-gray-600 dark:text-gray-400 pl-1" {...props}>{children}</li>,
+
   code: ({ inline, children, className, ...props }: React.HTMLAttributes<HTMLElement> & { inline?: boolean }) => {
-    if (inline) {
-      return (
-        <code className="rounded-md border border-gray-200 bg-gray-100 px-1.5 py-0.5 font-mono text-[0.8125rem] text-gray-800 dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-200" {...props}>
-          {children}
-        </code>
-      )
-    }
-    return (
-      <code className={`font-mono text-sm text-gray-200 ${className ?? ''}`} {...props}>
+    if (inline) return (
+      <code className="rounded-md border border-gray-200 bg-gray-100 px-1.5 py-0.5 font-mono text-[0.8125rem] text-gray-800 dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-200" {...props}>
         {children}
       </code>
     )
+    return <code className={`font-mono text-sm text-black dark:text-gray-200 ${className ?? ''}`} {...props}>{children}</code>
   },
+
   pre: PreBlock as never,
+
   blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
-    <blockquote className="my-4 border-l-4 border-indigo-400 pl-4 italic text-gray-500 dark:border-indigo-600 dark:text-gray-400" {...props}>
+    <blockquote
+      className="my-4 pl-4 italic text-gray-500 dark:text-gray-400"
+      style={{ borderLeft: '4px solid var(--doc-blockquote-border, #6366f1)' }}
+      {...props}
+    >
       {children}
     </blockquote>
   ),
-  strong: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
-    <strong className="font-semibold text-gray-900 dark:text-gray-100" {...props}>{children}</strong>
-  ),
+
+  strong: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => <strong className="font-semibold text-gray-900 dark:text-gray-100" {...props}>{children}</strong>,
   a: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a href={href} className="font-medium text-indigo-600 underline underline-offset-2 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300" {...props}>
-      {children}
-    </a>
+    <a href={href} className="font-medium underline underline-offset-2" style={{ color: 'var(--doc-accent, #6366f1)' }} {...props}>{children}</a>
   ),
   table: ({ children, ...props }: React.HTMLAttributes<HTMLTableElement>) => (
-    <div className="my-5 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+    <div className="my-5 overflow-x-auto rounded-xl border border-(--doc-accent)">
       <table className="w-full text-sm" {...props}>{children}</table>
     </div>
   ),
-  th: ({ children, ...props }: React.HTMLAttributes<HTMLTableCellElement>) => (
-    <th className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400" {...props}>
-      {children}
-    </th>
-  ),
-  td: ({ children, ...props }: React.HTMLAttributes<HTMLTableCellElement>) => (
-    <td className="border-b border-gray-100 px-4 py-2.5 text-gray-600 dark:border-gray-800/60 dark:text-gray-400" {...props}>
-      {children}
-    </td>
-  ),
-  hr: (props: React.HTMLAttributes<HTMLHRElement>) => (
-    <hr className="my-8 border-gray-200 dark:border-gray-800" {...props} />
-  ),
+  th: ({ children, ...props }: React.HTMLAttributes<HTMLTableCellElement>) => <th className="border-b px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide border-(--doc-accent) bg-(--doc-active-bg) text-(--doc-accent)" {...props}>{children}</th>,
+  td: ({ children, ...props }: React.HTMLAttributes<HTMLTableCellElement>) => <td className="border-b px-4 py-2.5 text-gray-600 border-(--doc-accent) dark:text-gray-400" {...props}>{children}</td>,
+  hr: (props: React.HTMLAttributes<HTMLHRElement>) => <hr className="my-8 border-gray-200 dark:border-gray-800" {...props} />,
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────
@@ -173,58 +149,58 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
   const [activeHeading, setActiveHeading] = useState<string>('')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
-  // ── Scroll-hide mobile nav bar ─────────────────────────────────────────────
   const [navVisible, setNavVisible] = useState(true)
   const lastScrollY = useRef(0)
 
   useEffect(() => {
+    const el = contentRef.current
+    if (!el) return
     const onScroll = () => {
-      const current = window.scrollY
-      // Show when scrolling up, hide when scrolling down (only past 80px)
+      const current = el.scrollTop
       if (current < 80 || current < lastScrollY.current) {
         setNavVisible(true)
       } else {
         setNavVisible(false)
-        setMobileNavOpen(false)
       }
       lastScrollY.current = current
     }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Extract ## headings for right TOC
   const headings = (activePage.content.match(/^##\s+(.+)$/gm) ?? []).map((h) =>
     h.replace(/^##\s+/, '')
   )
 
-  // Intersection observer for active heading
   useEffect(() => {
+    const el = contentRef.current
+    if (!el) return
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) setActiveHeading(entry.target.id)
         }
       },
-      { rootMargin: '-20% 0px -70% 0px' }
+      { root: el, rootMargin: '-20% 0px -70% 0px' }
     )
-    const headingEls = contentRef.current?.querySelectorAll('h2, h3') ?? []
-    headingEls.forEach((el) => observer.observe(el))
+    const headingEls = el.querySelectorAll('h2, h3')
+    headingEls.forEach((h) => observer.observe(h))
     return () => observer.disconnect()
   }, [activePage.slug])
 
-  const scrollTo = (heading: string) => {
-    document.getElementById(slugify(heading))?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  const scrollTo = useCallback((heading: string) => {
+    const el = contentRef.current
+    const target = el?.querySelector(`#${CSS.escape(slugify(heading))}`)
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
 
   const allPages = doc.sections.flatMap((s) => s.topics)
 
-  // ── Sidebar nav tree (shared between desktop + mobile) ────────────────────
   const SidebarNav = ({ onLinkClick }: { onLinkClick?: () => void }) => (
-    <nav className="space-y-5">
+    <nav className="space-y-5 relative top-[10px]">
       {doc.sections.map((section) => (
         <div key={section.title}>
-          <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+          <p className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-wider text-black dark:text-white">
             {section.title}
           </p>
           <ul className="space-y-0.5">
@@ -235,13 +211,16 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
                   <Link
                     href={`/docs/${params.slug}/${topic.slug}`}
                     onClick={onLinkClick}
-                    className={`block rounded-md px-2 py-1.5 text-sm transition-colors ${
-                      isActive
-                        ? 'bg-indigo-50 font-medium text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/60 dark:hover:text-gray-200'
-                    }`}
+                    className="block rounded-md px-2 py-1.5 text-sm transition-colors"
+                    style={isActive ? {
+                      backgroundColor: 'var(--doc-accent)',
+                      color: 'white',
+                      fontWeight: 500,
+                    } : {}}
                   >
-                    {topic.title}
+                    <span className={!isActive ? 'text-gray-600 dark:text-gray-400 hover:text-(--doc-active-text)' : ''}>
+                      {topic.title}
+                    </span>
                   </Link>
                 </li>
               )
@@ -253,12 +232,12 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
   )
 
   return (
-    <div className="flex min-h-[calc(100vh-57px)] w-full">
+    <div className="flex h-[calc(100vh-57px)] w-full overflow-hidden">
 
       {/* ── Desktop Left Sidebar ─────────────────────────────────────────── */}
       <aside className="hidden w-60 shrink-0 border-r border-gray-100 dark:border-gray-800 lg:block">
-        <div className="sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto px-3 py-6">
-          <p className="mb-4 px-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+        <div className="h-full overflow-y-auto px-3 py-6">
+          <p className="mb-4 px-2 text-[13px] font-semibold uppercase tracking-widest text-(--doc-accent)">
             {doc.title}
           </p>
           <SidebarNav />
@@ -266,9 +245,12 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
       </aside>
 
       {/* ── Main Content ─────────────────────────────────────────────────── */}
-      <main className="min-w-0 flex-1 px-4 pb-32 pt-8 sm:px-8 lg:pb-10 xl:px-16" ref={contentRef}>
+      <main
+        className="min-w-0 flex-1 overflow-y-auto px-4 pt-8 sm:px-8 xl:px-16 scroll-smooth"
+        ref={contentRef}
+      >
         <div className="mb-8 border-b border-gray-100 pb-6 dark:border-gray-800">
-          <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-indigo-500">
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-(--doc-section-color)">
             {activeSection}
           </p>
           <h1 className="text-2xl font-semibold tracking-tight text-gray-950 dark:text-gray-50 sm:text-3xl">
@@ -276,7 +258,7 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
           </h1>
         </div>
 
-        <div className="max-w-3xl">
+        <div className="max-w-3xl pb-32 lg:pb-10">
           <ReactMarkdown
             rehypePlugins={[rehypeHighlight]}
             remarkPlugins={[remarkGfm]}
@@ -284,14 +266,13 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
           >
             {activePage.content}
           </ReactMarkdown>
+          <PrevNext doc={doc} activeSlug={activePage.slug} docSlug={String(params.slug)} />
         </div>
-
-        <PrevNext doc={doc} activeSlug={activePage.slug} docSlug={String(params.slug)} />
       </main>
 
       {/* ── Desktop Right TOC ────────────────────────────────────────────── */}
       <aside className="hidden w-52 shrink-0 xl:block">
-        <div className="sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto px-4 py-6">
+        <div className="h-full overflow-y-auto px-4 py-6">
           {headings.length > 0 && (
             <>
               <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
@@ -300,16 +281,11 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
               <nav className="space-y-0.5">
                 {headings.map((heading) => {
                   const id = slugify(heading)
-                  const isActive = activeHeading === id
                   return (
                     <button
                       key={heading}
                       onClick={() => scrollTo(heading)}
-                      className={`block w-full text-left rounded px-2 py-1 text-xs transition-colors ${
-                        isActive
-                          ? 'font-medium text-indigo-600 dark:text-indigo-400'
-                          : 'text-gray-500 hover:text-gray-900 dark:text-gray-500 dark:hover:text-gray-300'
-                      }`}
+                      className="cursor-pointer block w-full text-left rounded px-2 py-1 text-[13px] transition-colors text-gray-500 hover:text-(--doc-accent) dark:text-gray-500 dark:hover:text-(--doc-active-text)"
                     >
                       {heading}
                     </button>
@@ -324,10 +300,9 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
       {/* ── Mobile Bottom Nav Bar ────────────────────────────────────────── */}
       <div
         className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden transition-transform duration-300 ease-in-out ${
-          navVisible ? 'translate-y-0' : 'translate-y-full'
+          navVisible || mobileNavOpen ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
-        {/* Expanded sidebar panel */}
         {mobileNavOpen && (
           <div className="max-h-[60vh] overflow-y-auto border-t border-gray-200 bg-white px-4 py-5 dark:border-gray-800 dark:bg-gray-950">
             <p className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
@@ -337,16 +312,14 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
           </div>
         )}
 
-        {/* Bottom bar */}
         <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-950">
-          {/* Prev page */}
           {(() => {
             const idx = allPages.findIndex((p) => p.slug === activePage.slug)
             const prev = idx > 0 ? allPages[idx - 1] : null
             return prev ? (
               <Link
                 href={`/docs/${params.slug}/${prev.slug}`}
-                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-gray-200"
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-(--doc-accent) dark:hover:text-(--doc-section-color)"
               >
                 <span>←</span>
                 <span className="max-w-[100px] truncate">{prev.title}</span>
@@ -354,25 +327,27 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
             ) : <div />
           })()}
 
-          {/* Toggle sidebar */}
           <button
             onClick={() => setMobileNavOpen((v) => !v)}
-            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 dark:border-(--doc-accent) dark:bg-(--doc-active-bg) dark:text-gray-300 cursor-pointer"
           >
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              {mobileNavOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M18 6l-12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
             </svg>
             {mobileNavOpen ? 'Close' : 'Contents'}
           </button>
 
-          {/* Next page */}
           {(() => {
             const idx = allPages.findIndex((p) => p.slug === activePage.slug)
             const next = idx < allPages.length - 1 ? allPages[idx + 1] : null
             return next ? (
               <Link
                 href={`/docs/${params.slug}/${next.slug}`}
-                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-gray-200"
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-(--doc-accent) dark:hover:text-(--doc-section-color)"
               >
                 <span className="max-w-[100px] truncate">{next.title}</span>
                 <span>→</span>
@@ -401,13 +376,15 @@ function PrevNext({ doc, activeSlug, docSlug }: { doc: DocForViewer; activeSlug:
       {prev ? (
         <Link href={`/docs/${docSlug}/${prev.slug}`} className="group flex flex-col gap-0.5">
           <span className="text-[10px] uppercase tracking-wider text-gray-400">Previous</span>
-          <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400">← {prev.title}</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors
+          group-hover:text-(--doc-accent)
+          dark:group-hover:text-(--doc-section-color)">← {prev.title}</span>
         </Link>
       ) : <div />}
       {next && (
         <Link href={`/docs/${docSlug}/${next.slug}`} className="group flex flex-col items-end gap-0.5">
           <span className="text-[10px] uppercase tracking-wider text-gray-400">Next</span>
-          <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400">{next.title} →</span>
+          <span className="text-sm font-medium text-gray-700 group-hover:text-(--doc-accent) dark:text-gray-300 dark:group-hover:text-(--doc-section-color)">{next.title} →</span>
         </Link>
       )}
     </div>

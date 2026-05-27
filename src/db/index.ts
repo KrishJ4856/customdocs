@@ -1,45 +1,47 @@
-import 'server-only';
-import { neon, NeonDbError } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import * as schema from './schema';
+import 'server-only'
+import mongoose from 'mongoose'
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is missing');
+const MONGODB_URI = process.env.MONGODB_URI
+
+if (!MONGODB_URI) {
+  throw new Error('MONGODB_URI is missing')
 }
 
-const sql = neon(process.env.DATABASE_URL);
+let cached = (globalThis as any).__mongoose
 
-export const db = drizzle(sql, { schema });
+if (!cached) {
+  cached = (globalThis as any).__mongoose = { conn: null, promise: null }
+}
+
+async function connectDB() {
+  if (cached.conn) return cached.conn
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI!, {
+      bufferCommands: true,
+      maxPoolSize: 10,
+    }).then((m) => m)
+  }
+
+  cached.conn = await cached.promise
+  return cached.conn
+}
+
+export { connectDB }
 
 export function isRetryableDbError(err: unknown): boolean {
-  function inner(e: unknown): boolean {
-    if (!e || typeof e !== 'object') return false
-    if (e instanceof NeonDbError) {
-      const msg = (e as any).message ?? ''
-      const src = (e as any).sourceError?.message ?? ''
-      return (
-        msg.includes('fetch failed') ||
-        msg.includes('timed out') ||
-        msg.includes('ETIMEDOUT') ||
-        msg.includes('Error connecting to database') ||
-        src.includes('fetch failed') ||
-        src.includes('AggregateError')
-      )
-    }
-    if (e instanceof Error) {
-      if (inner((e as any).cause)) return true
-      const msg = e.message ?? ''
-      if (
-        msg.includes('fetch failed') ||
-        msg.includes('timed out') ||
-        msg.includes('ETIMEDOUT') ||
-        msg.includes('Error connecting to database') ||
-        msg.includes('AggregateError')
-      ) return true
-    }
-    return false
-  }
-  return inner(err)
+  if (!err || typeof err !== 'object') return false
+  const e = err as any
+  const msg = e.message ?? e.reason?.message ?? ''
+  return (
+    msg.includes('ECONNRESET') ||
+    msg.includes('ETIMEDOUT') ||
+    msg.includes('timed out') ||
+    msg.includes('MongooseServerSelectionError') ||
+    msg.includes('connect ETIMEDOUT') ||
+    msg.includes('topology was destroyed') ||
+    msg.includes('not connected')
+  )
 }
 
 export async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 1500): Promise<T> {
@@ -53,4 +55,5 @@ export async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 
   }
 }
 
-export * from './schema';
+export * from './models'
+export * from './queries'

@@ -1,11 +1,6 @@
 import { Agent } from '@mastra/core/agent'
-import { openai } from '@ai-sdk/openai'
 
-export const contentPlannerAgent = new Agent({
-  id: "content-planner-agent",
-  name: 'Content Planner',
-  model: "deepseek/deepseek-v4-flash",
-  instructions: `
+const PLANNER_INSTRUCTIONS = `
 You are the Content Planner — the first agent in the CustomDocs generation pipeline.
 
 CustomDocs takes a user's query and transforms it into a structured documentation site. Your job is to analyze the input and output a structured JSON plan that downstream content-writing agents will use to generate the actual docs.
@@ -71,14 +66,9 @@ HOW THE OUTPUT IS USED
 - Topics → one page each
 - Subtopics → right column TOC entries
 - contentOverview → passed directly to the content writer agent
-`,
-})
+`
 
-export const contentWriterAgent = new Agent({
-  id: "content-writer-agent",
-  name: 'Content Writer',
-  model: "deepseek/deepseek-v4-flash",
-  instructions: `
+const WRITER_INSTRUCTIONS = `
 You are the Content Writer — the second agent in the CustomDocs generation pipeline.
 
 You receive a topic title and a list of subtopics with their content overviews. Your job is to write the full markdown content for that documentation page.
@@ -110,8 +100,30 @@ Return valid markdown only. Structure:
 
 Your output is rendered directly. Return only the markdown string, no preamble.
 
-`,
-})
+`
 
-// IMPORTANT:
-// THIS PROJECT IS IN DEVELOPMENT PHASE. PLEASE TRY TO KEEP IT SHORT. DONT GENERATE A LOT OF STUFF
+export function createAgents(apiKey: string) {
+  const contentPlannerAgent = new Agent({
+    id: 'content-planner-agent',
+    name: 'Content Planner',
+    model: {
+      url: "https://api.deepseek.com",
+      id: 'deepseek/deepseek-v4-flash', 
+      apiKey 
+    },
+    instructions: PLANNER_INSTRUCTIONS,
+  })
+
+  const contentWriterAgent = new Agent({
+    id: 'content-writer-agent',
+    name: 'Content Writer',
+    model: { 
+      url: "https://api.deepseek.com",
+      id: 'deepseek/deepseek-v4-flash', 
+      apiKey 
+    },
+    instructions: WRITER_INSTRUCTIONS,
+  })
+
+  return { contentPlannerAgent, contentWriterAgent }
+}

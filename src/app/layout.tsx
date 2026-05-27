@@ -1,27 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { geistSans, geistMono } from "./fonts"
 import {
   ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  Show,
-  UserButton,
 } from "@clerk/nextjs";
 import { ThemeProvider } from "@/context/ThemeContext";
-import ThemeSwitcher from "@/components/ThemeSwitcher";
+import { DocThemeProvider } from "@/context/DocThemeContext"
+import { KeyModalProvider } from "@/context/KeyModalContext"
+import Header from '@/components/Header'
 import "./globals.css";
-
 import 'highlight.js/styles/github-dark.css'
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Custom Docs",
@@ -39,27 +26,17 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-gray-50/50 dark:bg-gray-950 transition-colors">
         <ClerkProvider>
           <ThemeProvider>
-            <header className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white dark:bg-black px-6 py-3 dark:border-gray-700">
-              <span className="font-semibold text-gray-900 dark:text-gray-100">
-                Custom Docs
-              </span>
-              <div className="flex items-center gap-3">
-                <ThemeSwitcher />
-                <Show when="signed-out">
-                  <div className="flex items-center gap-2">
-                    <SignInButton />
-                    <SignUpButton />
-                  </div>
-                </Show>
-                <Show when="signed-in">
-                  <UserButton />
-                </Show>
-              </div>
-            </header>
-            {children}
+            <DocThemeProvider>
+              <KeyModalProvider>
+                <Header />
+                <main className="flex-1">
+                  {children}
+                </main>
+              </KeyModalProvider>
+            </DocThemeProvider>
           </ThemeProvider>
         </ClerkProvider>
       </body>
