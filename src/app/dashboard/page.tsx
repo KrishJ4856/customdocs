@@ -201,13 +201,13 @@ export default function DashboardPage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed left-1/2 top-6 z-50 -translate-x-1/2 animate-in fade-in slide-in-from-top-2 duration-200 rounded-xl border border-gray-200/80 bg-white/95 px-5 py-3 text-sm font-medium text-gray-700 shadow-lg backdrop-blur-sm dark:border-gray-700/80 dark:bg-gray-900/95 dark:text-gray-200">
+        <div className="fixed left-1/2 top-6 z-50 -translate-x-1/2 w-[90%] sm:w-auto sm:max-w-lg animate-in fade-in slide-in-from-top-2 duration-200 rounded-xl border border-gray-200/80 bg-white/95 px-5 py-3 text-sm font-medium text-gray-700 shadow-lg backdrop-blur-sm dark:border-gray-700/80 dark:bg-gray-900/95 dark:text-gray-200">
           {toast}
         </div>
       )}
 
       {showGenToast && (
-        <div className="fixed left-1/2 top-6 z-50 -translate-x-1/2 animate-in fade-in slide-in-from-top-2 duration-200 rounded-xl border border-amber-200/80 bg-amber-50/95 px-5 py-3 text-sm font-medium text-amber-800 shadow-lg backdrop-blur-sm dark:border-amber-800/60 dark:bg-amber-950/90 dark:text-amber-200 flex items-center gap-3">
+        <div className="fixed left-1/2 top-6 z-50 -translate-x-1/2 w-[90%] sm:w-auto sm:max-w-lg animate-in fade-in slide-in-from-top-2 duration-200 rounded-xl border border-amber-200/80 bg-amber-50/95 px-4 py-3 text-xs sm:text-sm font-medium text-amber-800 shadow-lg backdrop-blur-sm dark:border-amber-800/60 dark:bg-amber-950/90 dark:text-amber-200 flex items-center gap-2 sm:gap-3">
           <svg className="h-4 w-4 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />

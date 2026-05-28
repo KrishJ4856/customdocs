@@ -20,7 +20,7 @@ export default function Header() {
   const { openKeyModal } = useKeyModal()
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/80 px-6 py-3.5 backdrop-blur-xl dark:border-gray-800/80 transition-colors dark:bg-black/60">
+    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200/80 px-3 sm:px-6 py-3.5 backdrop-blur-xl dark:border-gray-800/80 transition-colors dark:bg-black/60">
       <Link
         href="/"
         className="group flex items-center gap-2.5 transition-opacity hover:opacity-80"
@@ -40,20 +40,20 @@ export default function Header() {
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
           </svg>
         </div> */}
-        <span className={`${playwrite.className} text-xl tracking-tight transition-colors text-black dark:text-white font-bold`}>
+        <span className={`${playwrite.className} text-base sm:text-xl tracking-tight transition-colors text-black dark:text-white font-bold`}>
           custom<span className={`${playwrite.className} transition-colors text-(--doc-accent)`}>Docs</span>
         </span>
       </Link>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <NavbarExtras />
 
         {!isDashboard && (
-          <div className="flex items-center gap-2 pl-4 border-l border-gray-200 dark:border-gray-800">
+          <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-gray-200 dark:border-gray-800">
             <Show when="signed-in">
               <Link
                 href="/dashboard"
-                className="group inline-flex items-center gap-2 rounded-lg bg-gray-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-gray-800 hover:shadow-md active:scale-[0.98] dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100"
+                className="group hidden sm:inline-flex items-center gap-2 rounded-lg bg-gray-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-gray-800 hover:shadow-md active:scale-[0.98] dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100"
               >
                 Dashboard
                 <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>

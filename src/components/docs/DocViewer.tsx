@@ -149,25 +149,6 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
   const [activeHeading, setActiveHeading] = useState<string>('')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
-  const [navVisible, setNavVisible] = useState(true)
-  const lastScrollY = useRef(0)
-
-  useEffect(() => {
-    const el = contentRef.current
-    if (!el) return
-    const onScroll = () => {
-      const current = el.scrollTop
-      if (current < 80 || current < lastScrollY.current) {
-        setNavVisible(true)
-      } else {
-        setNavVisible(false)
-      }
-      lastScrollY.current = current
-    }
-    el.addEventListener('scroll', onScroll, { passive: true })
-    return () => el.removeEventListener('scroll', onScroll)
-  }, [])
-
   const headings = (activePage.content.match(/^##\s+(.+)$/gm) ?? []).map((h) =>
     h.replace(/^##\s+/, '')
   )
@@ -299,9 +280,7 @@ export default function DocViewer({ doc, activePage, activeSection }: Props) {
 
       {/* ── Mobile Bottom Nav Bar ────────────────────────────────────────── */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden transition-transform duration-300 ease-in-out ${
-          navVisible || mobileNavOpen ? 'translate-y-0' : 'translate-y-full'
-        }`}
+        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden"
       >
         {mobileNavOpen && (
           <div className="max-h-[60vh] overflow-y-auto border-t border-gray-200 bg-white px-4 py-5 dark:border-gray-800 dark:bg-gray-950">

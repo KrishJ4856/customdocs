@@ -1,5 +1,7 @@
 import { playwrite, googleSansFlex } from "@/app/fonts"
 import DemoSection from "@/components/docs/DemoSection"
+import { Show, SignUpButton } from "@clerk/nextjs"
+import Link from "next/link"
 
 export default function LandingPage() {
   return (
@@ -26,6 +28,21 @@ export default function LandingPage() {
           <p className={`${googleSansFlex.className} max-w-2xl text-[1.2rem] text-gray-500 dark:text-gray-400 leading-relaxed`}>
             Get beautifully 🎀 structured docs for any topic you want to learn 📒
           </p>
+
+          <div className="flex flex-col items-center gap-3 mt-4 sm:hidden">
+            <Show when="signed-in">
+              <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-lg bg-gray-950 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-gray-800 active:scale-[0.98] dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100">
+                Dashboard →
+              </Link>
+            </Show>
+            <Show when="signed-out">
+              <SignUpButton>
+                <button className="inline-flex items-center gap-2 rounded-lg bg-gray-950 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-gray-800 active:scale-[0.98] dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100 cursor-pointer">
+                  Get started
+                </button>
+              </SignUpButton>
+            </Show>
+          </div>
         </div>
       </section>
 
