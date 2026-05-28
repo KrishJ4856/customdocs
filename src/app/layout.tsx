@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from '@vercel/analytics/next';
 import { geistSans, geistMono } from "./fonts"
 import {
   ClerkProvider,
@@ -11,8 +12,20 @@ import "./globals.css";
 import 'highlight.js/styles/github-dark.css'
 
 export const metadata: Metadata = {
-  title: "Custom Docs",
-  description: "A Next.js app with Clerk auth and theme switcher",
+  title: 'CustomDocs — AI-powered documentation for any topic',
+  description: 'Turn any topic into beautifully structured docs. Type what you want to learn and AI plans, writes, and delivers a full documentation site with sidebar navigation, code examples, and syntax highlighting.',
+  openGraph: {
+    title: 'CustomDocs — AI-powered documentation for any topic',
+    description: 'Turn any topic into beautifully structured docs using AI.',
+    url: 'https://customdocs.app',
+    siteName: 'CustomDocs',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CustomDocs — AI-powered documentation for any topic',
+    description: 'Turn any topic into beautifully structured docs using AI.',
+  },
 };
 
 export default function RootLayout({
@@ -39,6 +52,7 @@ export default function RootLayout({
             </DocThemeProvider>
           </ThemeProvider>
         </ClerkProvider>
+        <Analytics />
       </body>
     </html>
   );
